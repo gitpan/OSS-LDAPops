@@ -24,7 +24,7 @@ Simon <simon@hacknix.net>
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.0';
+$VERSION = '1.01';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -534,7 +534,7 @@ sub deluserfromhug
 #
 #Usage:
 #
-#$obj->addgoruptogroup(<ug|hg>,<host>,<group>);
+#$obj->addggrouptogroup(<ug|hg>,<host>,<group>);
 #
 #Returns a text string on error
 #Returns false on success

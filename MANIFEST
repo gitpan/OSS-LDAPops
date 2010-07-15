@@ -3,4 +3,7 @@ Makefile.PL
 lib/OSS/LDAPops.pm
 bin/ldapops.pl
 bin/netgroupcache.pl
+ldapops.conf
+netgroupcache.conf
+batchadd.csv
 META.yml                                 Module meta-data (added by MakeMaker)

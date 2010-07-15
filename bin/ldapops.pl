@@ -11,7 +11,7 @@
 #
 #All operations required to administer the directory are avaliable
 #via this program apart from changing objects outside of the user and group
-#space. These must be altered manually. 
+#space. These must be altered manuaelly. 
 #
 #This code does not have to run on the LDAP server as it is networm enabled
 #and can be used over the network from a suitable location, ACL permitting of course!
@@ -21,32 +21,21 @@ use strict;
 
 #Use OSS::LDAPops object. 
 use OSS::LDAPops;
+#Use file operations
+use OSS::Fileops;
 
-#Global config
-#These options are passed to OSS::LDAPops and are all required.
-my($config) = 
+#Load config
+
+if (-r "$ENV{HOME}/.ldapopsrc")
 {
-	LDAPHOST	=>	'127.0.0.1',
-	BINDDN		=>	'uid=webportal, ou=writeaccess, dc=auth, dc=lastminute,dc=com',
-	BASEDN		=> 	'dc=auth,dc=lastminute,dc=com',
-	NISDOMAIN	=>	'auth.lastminute.com',
-	PASSWORD	=>	'test',
-};
-
-#These config options are used within this script
-my($localconfig) =
+	require "$ENV{HOME}/.ldapopsrc";
+}
+else
 {
-	SHADOWMAX	=>	90,
-	SHADOWMIN	=>	10,
-	SHADOWWARNING	=>	10,
-	SHELL		=>	'/bin/bash',
-	#Trailing '/' please!
-	HOMEPREFIX	=>	'/opt/userhomes/'
+	require '/etc/ldapops.conf'
 };
-
-
 #Instantiate new object. 
-my($ldapopsobj) = OSS::LDAPops->new($config);
+my($ldapopsobj) = OSS::LDAPops->new($GLOBAL::config);
 if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
 my($ret);
 my(@retu);
@@ -292,19 +281,49 @@ elsif ($ARGV[0] eq '-au')
 	print("\nEmail address:");
 	$mail = <STDIN>;
 	chomp($mail);
-	print("\nSG Number:");
+	print("\nEmployee Number:");
 	$employeenumber = <STDIN>;
 	chomp($employeenumber);
+	print("\nNumeric GID or enter for default [$$GLOBAL::localconfig{GID}]:");
+	$gid = <STDIN>;
+	chomp($gid);
+	if ($gid !~ /^\d+/)
+	{
+		$gid = $$GLOBAL::localconfig{GID};
+	};
 	print("\nPassword:");
 	$pw = <STDIN>;
 	chomp($pw);
-	$cn = $givenname.' '.$sn;
 	$ldapopsobj->bind;
-	$gid = 300;
-	$homedir = $$localconfig{HOMEPREFIX}.$uid;
-	$loginshell = $$localconfig{SHELL};
-	$ret = $ldapopsobj->adduser($uid,$givenname,$sn,$cn,$mail,$pw,$gid,$homedir,$loginshell,$$localconfig{SHADOWMAX},$$localconfig{SHADOWMIN},$$localconfig{SHADOWWARNING},$employeenumber);
+	$ret = $ldapopsobj->adduser($uid,$givenname,$sn,$givenname.' '.$sn,$mail,$pw,$gid,$$GLOBAL::localconfig{HOMEPREFIX}.$uid,$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$employeenumber);
 	if($ret) {die($ret);};
+	exit;
+}
+#Batch add users
+elsif ($ARGV[0] eq '-b')
+{
+	if (!$ARGV[1])
+        {
+                print("\nUsage: ldapops.pl -upr <csv file>\n");
+                exit;
+        };
+        my($fileobj) = OSS::Fileops->new;
+	my(@csvfile) = $fileobj->read_file($ARGV[1]);
+	if (shift(@csvfile) !~ /^username,given name,surname,email,employeenumber,password, numeric gid/)
+	 {
+		die("'Error: CSV headings incorrect");
+
+	 }
+	$ldapopsobj->bind;
+	my(@linesplit);
+	foreach my $line (@csvfile)
+	{
+		chomp($line);
+		@linesplit = split(/,/,$line);
+		my($ret) = $ldapopsobj->adduser($linesplit[0],$linesplit[1],$linesplit[2],$linesplit[1].' '.$linesplit[2],$linesplit[3],$linesplit[5],$linesplit[6],$$GLOBAL::localconfig{HOMEPREFIX}.$linesplit[0],$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$linesplit[4]);
+		if($ret) {print("User $linesplit[0] not added: $ret\n");};
+	
+	};
 	exit;
 }
 #Delete DN
@@ -340,6 +359,7 @@ else
 	print("./ldapops.pl -au \t\t\t\t| add user\n");
 	print("./ldapops.pl -up \t\t\t\t| update password for user\n");
 	print("./ldapops.pl -upr \t\t\t\t| update password for user and force reset on next login\n");
+	print("./ldapops.pl -b \t\t\t\t| batch add users from CSV file (see batchadd.csv for format)
 	print("./ldapops.pl -d \'<dn>\'\t\t\t\t| delete dn (note the quotes)\n");
 	print("\nNote: the wildcard \'*\' can be used, but must be escaped as \\*\n");
 

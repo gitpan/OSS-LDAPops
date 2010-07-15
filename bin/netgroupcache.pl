@@ -29,20 +29,12 @@ use strict;
 #Use OSS::LDAPops object. 
 use OSS::LDAPops;
 
-#Global config
-#These options are passed to OSS::LDAPops and are all required.
-my($config) = 
-{
-	LDAPHOST	=>	'ldap01.virt.hacknix.net',
-	BINDDN		=>	'uid=webportal, ou=writeaccess, dc=auth, dc=hacknix,dc=net',
-	BASEDN		=> 	'dc=auth,dc=hacknix,dc=net',
-	NISDOMAIN	=>	'auth.hacknix.net',
-	PASSWORD	=>	'test'
+#Load config
+require '/etc/netgroupcache.conf';
 
-};
 
 #Instantiate new object. 
-my($ldapopsobj) = OSS::LDAPops->new($config);
+my($ldapopsobj) = OSS::LDAPops->new($GLOBAL::config);
 if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
 my($ret);
 my(@retu);
