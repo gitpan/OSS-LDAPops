@@ -1,0 +1,6 @@
+MANIFEST
+Makefile.PL
+lib/OSS/LDAPops.pm
+bin/ldapops.pl
+bin/netgroupcache.pl
+META.yml                                 Module meta-data (added by MakeMaker)
