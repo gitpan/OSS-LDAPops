@@ -24,7 +24,7 @@ Simon <simon@hacknix.net>
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.01';
+$VERSION = '1.02';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.

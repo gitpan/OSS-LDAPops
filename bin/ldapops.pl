@@ -359,7 +359,7 @@ else
 	print("./ldapops.pl -au \t\t\t\t| add user\n");
 	print("./ldapops.pl -up \t\t\t\t| update password for user\n");
 	print("./ldapops.pl -upr \t\t\t\t| update password for user and force reset on next login\n");
-	print("./ldapops.pl -b \t\t\t\t| batch add users from CSV file (see batchadd.csv for format)
+	print("./ldapops.pl -b <csv file> \t\t\t| batch add users from CSV file (see batchadd.csv for format\n");
 	print("./ldapops.pl -d \'<dn>\'\t\t\t\t| delete dn (note the quotes)\n");
 	print("\nNote: the wildcard \'*\' can be used, but must be escaped as \\*\n");
 
