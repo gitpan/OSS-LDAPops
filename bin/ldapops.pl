@@ -1,20 +1,81 @@
 #!/usr/bin/perl
-#
-#Perform operations on the OSS ldap directory
+=head1 NAME
 
-#This code uses the reference module for OSS directory actions:
-#"OSS::LDAPops." Please see OSS/LDAPops.pm for details on the implemention
-#of methods. 
-#
-#This program will return nothing on sucess and will die with
-#an error message to STDERR on fail. 
-#
-#All operations required to administer the directory are avaliable
-#via this program apart from changing objects outside of the user and group
-#space. These must be altered manuaelly. 
-#
-#This code does not have to run on the LDAP server as it is networm enabled
-#and can be used over the network from a suitable location, ACL permitting of course!
+ldapops.pl - perform operations on an LDAP directory from the command line
+
+=head1 SYNOPISIS
+
+Perform operations on the OSS ldap directory
+
+This code uses the module for OSS directory actions, "OSS::LDAPops." Please see OSS::LDAPops for more details. 
+
+This program will return nothing on sucess and will die with
+an error message to STDERR on fail. 
+
+All operations required to administer the directory are avaliable
+via this program apart from changing objects outside of the user and group
+space. These must be altered manuaelly. 
+
+This code does not have to run on the LDAP server as it is networm enabled
+and can be used over the network from a suitable location, ACL permitting of course!
+
+=head1 CONFIG
+
+A configuration file is required in /etc/ldapops.conf or ~/.ldapopsrc. An example is below:
+
+	$GLOBAL::config =
+	{
+		LDAPHOST	=>	'ldap01.mydomain.net',
+		BINDDN		=>	'uid=webportal, ou=writeaccess, dc=auth, dc=mydomain,dc=net',
+		BASEDN		=> 	'dc=auth,dc=mydomain,dc=net',
+		NISDOMAIN	=>	'auth.mydomain.net',
+		PASSWORD	=>	'xyzzy',
+	};
+
+	#These config options are used within this script
+	$GLOBAL::localconfig =
+	{
+		SHADOWMAX	=>	90,
+		SHADOWMIN	=>	10,
+		SHADOWWARNING	=>	10,
+		SHELL		=>	'/bin/bash',
+		#Trailing '/' please!
+		HOMEPREFIX	=>	'/home/',
+		GID		=>	300
+	};
+
+	#This 1 is required!
+	1;
+
+This example file is also included in the source distribution. 
+
+=head1 USAGE
+
+	./ldapops.pl -su <string>                       | search user
+	./ldapops.pl -sg <string>                       | search group
+	./ldapops.pl -ah <hostname>                     | add host
+	./ldapops.pl -ahg <group>                       | add hostgroup
+	./ldapops.pl -aug <user>                        | add usergroup
+	./ldapops.pl -auug <userid> <group>             | add user to user group
+	./ldapops.pl -duug <userid> <group>             | delete user from user group
+	./ldapops.pl -auh <userid> <host>               | add user to host
+	./ldapops.pl -duh <userid> <host>               | delete user from host
+	./ldapops.pl -ahhg <host> <group>               | add host to host group
+	./ldapops.pl -dhhg <host> <group>               | delete host from host group
+	./ldapops.pl -augug <addgroup> <togroup>        | add user group to user group
+	./ldapops.pl -dugug <delgroup> <fromgroup>      | delete user group from user group
+	./ldapops.pl -ahghg <addgroup> <togroup>        | add host group to host group
+	./ldapops.pl -dhghg <delgroup> <fromgroup>      | delete host group from host group
+	./ldapops.pl -au                                | add user
+	./ldapops.pl -up                                | update password for user
+	./ldapops.pl -upr                               | update password for user and force reset on next login
+	./ldapops.pl -b <csv file>                      | batch add users from CSV file (see batchadd.csv for format
+	./ldapops.pl -d '<dn>'                          | delete dn (note the quotes)
+
+	Note: the wildcard '*' can be used, but must be escaped as \*
+
+
+=cut
 
 #use strict pragma.
 use strict;

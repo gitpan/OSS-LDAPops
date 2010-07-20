@@ -11,5 +11,10 @@ WriteMakefile
 			{
 				Net::LDAP	=> 0.34,
 
-			}
+			},
+	'EXE_FILES' =>
+			[
+				'bin/ldapops.pl',
+				'bin/netgroupcache.pl'
+			]
 );

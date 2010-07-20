@@ -1,8 +1,33 @@
 =head1 NAME
 
-OSS::LDAPops - Perform operations on LDAP directory
+OSS::LDAPops - Perform operations on user accounts, groups and netgroups stored in an LDAP directory
 
 =head1 SYSNOPSIS
+
+	#Define config hash
+	$GLOBAL::config = 
+	{
+		LDAPHOST	=>	'ldap01.mydomain.net',
+		BINDDN		=>	'uid=webportal, ou=writeaccess, dc=auth, dc=mydomain,dc=net',
+		BASEDN		=> 	'dc=auth,dc=mydomain,dc=net',
+		NISDOMAIN	=>	'auth.mydomain.net',
+		PASSWORD	=>	'xyzzy',
+	};
+	#Instantiate new object and connect to server
+	my($ldapopsobj) = OSS::LDAPops->new($GLOBAL::config);
+	if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
+	my($ret);
+	my(@retu);
+	
+	#Bind server
+	$ldapopsobj->bind;
+	@retu = $ldapopsobj->searchuser($ARGV[1]);
+	die($retu[0]) if (($retu[0] ne undef) and (ref($retu[0]) !~ m/Net::LDAP::Entry/) );
+	foreach my $entry (@retu) {$entry->dump; }
+	#if($ret) {die($ret);};
+	exit;
+
+=head1 DESCRIPTION
 
 This module manipulates user, group and netgroup objects within an LDAP directory. 
 
@@ -12,19 +37,63 @@ OSS::LDAPops.
 netgroupcache.pl is also included. This uses OSS::LDAPops to create a local cache of 
 LDAP-backed netgroups in /etc/netgroup.
 
-=head1 DESCRIPTION
-
-TODO
-
 =head1 AUTHOR
 
 Simon <simon@hacknix.net>
+
+=head1 ASSUMPTIONS ABOUT THE DIRECTORY
+
+This module and associated sripts make some assumptions about how your directory is
+configured. these include:
+
+=over 
+
+=item * 
+
+Storage of maxuid
+
+=item *
+
+Conventions for use of netgroups
+
+=item *
+
+nis.schema is patched to allow equalityMatch on nisNetgroupTriple objects
+
+=back
+
+For more information on directory configuration, and a complete HOWTO which follows
+this model from installation through to implementation and host configuration, please 
+see:
+
+<TODO: check back soon>
+
+=head1 METHODS
+
+This section describes the methods that are implemented and their use. 
+
+=head2 new
+
+	#Define config hash
+	$GLOBAL::config = 
+	{
+		LDAPHOST	=>	'ldap01.mydomain.net',
+		BINDDN		=>	'uid=webportal, ou=writeaccess, dc=auth, dc=lastminute,dc=com',
+		BASEDN		=> 	'dc=auth,dc=mydomain,dc=net',
+		NISDOMAIN	=>	'auth.mydomain.net',
+		PASSWORD	=>	'xyzzy',
+	};
+	#Instantiate new object and connect to server
+	my($ldapopsobj) = OSS::LDAPops->new($GLOBAL::config);
+	if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
+	
+Instantiates an object and connects to the LDAP server. Returns an object on success and false on error.
 
 =cut
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.02';
+$VERSION = '1.022';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -76,10 +145,14 @@ sub new
 
 };
 
-#Bind to LDAP server with supplied credentials. 
-#
-#No arguments are accepted as the pre-supplied config
-#values are used.
+=head2 bind
+
+	#Bind to LDAP server with supplied credentials. 
+	#
+	#No arguments are accepted as the pre-supplied config
+	#values are used.
+
+=cut
 sub bind
 {
 	my($self) = shift;
@@ -91,16 +164,18 @@ sub bind
 	$msg->code && return ($msg->error);
 };
 
-#Check to see if a group exists. 
-#
-#Usage:
-#
-#$obj-<groupexists(<group>);
-#
-#
-#Returns 0 when the group does not exist.
-#Returns 2 when the group does exists.
-#Returns a text string on error. 
+=head2 groupexists
+
+Check to see if a group exists. 
+	
+	
+	$obj->groupexists(<group>);
+	
+Returns 0 when the group does not exist.
+Returns 2 when the group does exists.
+Returns a text string on error. 
+
+=cut
 sub groupexists
 {
 	my($self) = shift;
@@ -116,15 +191,17 @@ sub groupexists
 	else {return(0);};
 };
 
-#Check if user exists. 
-#
-#Usage: 
-#
-#$obj->userexists(<user>);
-##
-#Returns 0 when the group does not exist.
-#Returns 2 when the group does exists.
-#Returns a text string on error. 
+=head2 userexists
+
+Check if user exists. 
+	
+	$obj->userexists(<user>);
+
+Returns 0 when the group does not exist.
+Returns 2 when the group does exists.
+Returns a text string on error. 
+
+=cut
 sub userexists
 {
 	my($self) = shift;
@@ -140,16 +217,19 @@ sub userexists
 	else {return(0);};
 };
 
-#Search for a users entry in the directory.
-#
-#Usage:
-#
-#$obj->searchuser(<userid>);
-#(the wildcard * can be used)
-#
-#Returns an array of Net::LDAP:Entry objects on success
-#Returns false on no results. 
-#Returns an error string on error. 
+=head2 searchuser
+
+Search for a users entry in the directory.
+	
+	$obj->searchuser(<userid>);
+
+(the wildcard * can be used)
+	
+Returns an array of Net::LDAP:Entry objects on success
+Returns false on no results. 
+Returns an error string on error. 
+
+=cut
 sub searchuser
 {
 	my($self) = shift;
@@ -166,16 +246,19 @@ sub searchuser
 
 };
 
-#Search for a group entry in the directory.
-#
-#Usage:
-#
-#$obj->searchgroup(<group>);
-#(the wildcard * can be used)
-#
-#Returns an array of Net::LDAP:Entry objects on success
-#Returns false on no results. 
-#Returns an error string on error. 
+=head2 searchnetgroup
+
+Search for a netgroup entry in the directory.
+
+	#$obj->searchnetgroup(<group>);
+
+(the wildcard * can be used)
+	
+Returns an array of Net::LDAP:Entry objects on success
+Returns false on no results. 
+Returns an error string on error. 
+
+=cut
 sub searchnetgroup
 {
 	my($self) = shift;
@@ -192,14 +275,16 @@ sub searchnetgroup
 
 };
 
-#Add a host  entry to the directory
-#
-#Usage:
-#
-#$obj->addhost(<hostname>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 addhost
+
+Add a host entry to the directory
+	
+	$obj->addhost(<hostname>);
+
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addhost
 {
 	my($self) =shift;
@@ -217,15 +302,16 @@ sub addhost
 
 };
 
+=head2 addhostgroup
 
-#Add a host group entry to the directory
-#
-#Usage:
-#
-#$obj->addhostgroup(<hostname>);
-#
-#Returns a text string on error
-#Returns false on success
+Add a host group entry to the directory
+	
+	$obj->addhostgroup(<hostname>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addhostgroup
 {
 	my($self) =shift;
@@ -243,14 +329,16 @@ sub addhostgroup
 
 };
 
-#Add a group group entry to the directory
-#
-#Usage:
-#
-#$obj->addusergroup(<groupname>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 addusergroup
+
+Add a user group entry to the directory
+	
+	$obj->addusergroup(<groupname>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addusergroup
 {
 	my($self) =shift;
@@ -284,15 +372,16 @@ sub salt
 	return join "", ('.', '/', 0..9, 'A'..'Z', 'a'..'z')[map {rand 64} (1..$length)];
 };
 
+=head2 adduser
 
-#Add a user entry to the directory
-#
-#Usage:
-#
-#$obj->adduser(<username>);
-#
-#Returns a text string on error
-#Returns false on success
+Add a user entry to the directory
+	
+	$obj->adduser(<username>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub adduser
 {
 	
@@ -353,14 +442,16 @@ sub adduser
 	$msg->code && return ($msg->error);
 };
 
-#Add a user entry to the directory
-#
-#Usage:
-#
-#$obj->updatepw(<username>,<password>,<force reset on login [1|0]>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 updatepw
+
+Add a user entry to the directory
+		
+	$obj->updatepw(<username>,<password>,<force reset on login [1|0]>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub updatepw
 {
 	my($self) = shift;
@@ -389,14 +480,16 @@ sub updatepw
 	$msg->code && return ($msg->error);
 };
 
-#Add a user entry to a user group
-#
-#Usage:
-#
-#$obj->addusertoug(<username>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 addusertoug
+
+Add a user entry to a user group
+
+	$obj->addusertoug(<username>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addusertoug
 {
 	my($self) = shift;
@@ -414,14 +507,16 @@ sub addusertoug
 	$msg->code && return ($msg->error);
 };
 
-#Add a user dfrom a user gorup
-#
-#Usage:
-#
-#$obj->deluserfromug(<username>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 deluserfromug
+
+Del a user from a user gorup
+
+	$obj->deluserfromug(<username>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub deluserfromug
 {
 	my($self) = shift;
@@ -436,14 +531,16 @@ sub deluserfromug
 	$msg->code && return ($msg->error);
 };
 
-#Add a host to a host group
-#
-#Usage:
-#
-#$obj->addhosttohg(<host>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 addhosttohg
+
+Add a host to a host group
+	
+	$obj->addhosttohg(<host>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addhosttohg
 {
 	my($self) = shift;
@@ -461,14 +558,16 @@ sub addhosttohg
 	$msg->code && return ($msg->error);
 };
 
-#Delete host from host group
-#
-#Usage:
-#
-#$obj->delhostfromhg(<host>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 delhostfromhg
+
+Delete host from host group
+	
+	$obj->delhostfromhg(<host>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub delhostfromhg
 {
 	my($self) = shift;
@@ -483,14 +582,16 @@ sub delhostfromhg
 	$msg->code && return ($msg->error);
 };
 
-#add user to host user group
-#
-#Usage:
-#
-#$obj->addusertohug(<host>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 addusertohug
+
+add user to host user group
+	
+	$obj->addusertohug(<host>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addusertohug
 {
 	my($self) = shift;
@@ -508,14 +609,16 @@ sub addusertohug
 	$msg->code && return ($msg->error);
 };
 
-#delete user from host user group
-#
-#Usage:
-#
-#$obj->deluserfromhug(<host>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 deluserfromhug
+
+delete user from host user group
+	
+	$obj->deluserfromhug(<host>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub deluserfromhug
 {
 	my($self) = shift;
@@ -530,14 +633,16 @@ sub deluserfromhug
 	$msg->code && return ($msg->error);
 };
 
-#Add a group to a group
-#
-#Usage:
-#
-#$obj->addggrouptogroup(<ug|hg>,<host>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 addgrouptogroup
+
+Add a group to a group
+
+	$obj->addggrouptogroup(<ug|hg>,<host>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub addgrouptogroup
 {
 	my($self) = shift;
@@ -557,14 +662,16 @@ sub addgrouptogroup
 	$msg->code && return ($msg->error);
 };
 
-#delete user group from group
-#
-#Usage:
-#
-#$obj->delgroupfromgroup(<ug|hg>,<host>,<group>);
-#
-#Returns a text string on error
-#Returns false on success
+=head2 delgroupfromgroup
+
+delete group from group
+
+	$obj->delgroupfromgroup(<ug|hg>,<host>,<group>);
+	
+Returns a text string on error
+Returns false on success
+
+=cut
 sub delgroupfromgroup
 {
 	my($self) = shift;
@@ -580,19 +687,21 @@ sub delgroupfromgroup
 	$msg->code && return ($msg->error);
 };
 
-#Delete an entry by DN (use with caution)
-#
-##Used to remove users and groups by DN
-#
-#WARNING: it's possible to damage the tree stucture
-#this way!!!! get it right!!
-#
-#Usage:
-#
-#$obj=>deletedn($dn);
-#
-#Returns a text string on error. 
-#Returns false on success
+=head2 deletedn
+
+Delete an entry by DN (use with caution)
+	
+Used to remove users and groups by DN
+	
+WARNING: it's possible to damage the tree stucture
+this way!!!! get it right!!
+	
+	$obj=>deletedn($dn);
+	
+Returns a text string on error. 
+Returns false on success
+
+=cut
 sub deletedn
 {
 	my($self) = shift;
