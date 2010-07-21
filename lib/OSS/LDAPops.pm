@@ -93,7 +93,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.022';
+$VERSION = '1.023';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -147,10 +147,10 @@ sub new
 
 =head2 bind
 
-	#Bind to LDAP server with supplied credentials. 
-	#
-	#No arguments are accepted as the pre-supplied config
-	#values are used.
+Bind to LDAP server with supplied credentials. 
+
+No arguments are accepted as the pre-supplied config
+values are used.
 
 =cut
 sub bind
@@ -386,7 +386,7 @@ sub adduser
 {
 	
 	my($self) = shift;
-	my($uid, $givenname, $sn, $cn, $mail, $password, $gid, $homedir, $loginshell,$shadowmax, $shadowmin, $shadowwarn, $employeenumber) = @_;
+	my($uid, $givenname, $sn, $cn, $mail, $password, $gid, $homedir, $loginshell,$shadowmax, $shadowmin, $shadowwarn, $shadowinactive, $employeenumber) = @_;
 	my($msg);
 	srand;
 	my($salt) = $self->salt;
@@ -436,6 +436,7 @@ sub adduser
 					'shadowMin'	=>	$shadowmin,
 					'shadowWarning'	=>	$shadowwarn,
 					'employeeNumber'=>	$employeenumber,
+					'shadowInactive'=>	$shadowinactive,
 					'shadowLastChange'=>	0
 					]
 				);

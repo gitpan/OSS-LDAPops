@@ -381,7 +381,7 @@ elsif ($ARGV[0] eq '-b')
 	{
 		chomp($line);
 		@linesplit = split(/,/,$line);
-		my($ret) = $ldapopsobj->adduser($linesplit[0],$linesplit[1],$linesplit[2],$linesplit[1].' '.$linesplit[2],$linesplit[3],$linesplit[5],$linesplit[6],$$GLOBAL::localconfig{HOMEPREFIX}.$linesplit[0],$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$linesplit[4]);
+		my($ret) = $ldapopsobj->adduser($linesplit[0],$linesplit[1],$linesplit[2],$linesplit[1].' '.$linesplit[2],$linesplit[3],$linesplit[5],$linesplit[6],$$GLOBAL::localconfig{HOMEPREFIX}.$linesplit[0],$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$$GLOBAL::localconfg{SHADOWINACTIVE},$linesplit[4]);
 		if($ret) {print("User $linesplit[0] not added: $ret\n");};
 	
 	};
