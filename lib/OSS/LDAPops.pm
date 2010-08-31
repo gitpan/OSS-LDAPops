@@ -93,7 +93,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.023';
+$VERSION = '1.024';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -683,6 +683,56 @@ sub delgroupfromgroup
 				"cn=$fromgroup-$type, ou=netgroups,".$self->{BASEDN},
 				delete	=> {
 						'memberNisNetgroup' => "$delgroup-$type"	
+					}
+				);
+	$msg->code && return ($msg->error);
+};
+
+=head2 addusertounixgroup
+
+add user to a unix group
+
+        $obj->addusertounixgroup(<user>,<unix group>);
+	        
+Returns a text string on error
+Returns false on success
+
+=cut
+
+sub addusertounixgroup
+{
+	my($self) = shift;
+	my($user,$group) = @_;
+	my($msg);
+	$msg = $self->{LDAPOBJ}->modify( 
+				"cn=$group, ou=unixgroups,".$self->{BASEDN},
+				add	=> {
+						'memberUid' => $user	
+					}
+				);
+	$msg->code && return ($msg->error);
+};
+
+=head2 deluserfromunixgroup
+
+delete user from a unix group
+
+        $obj->deluserfromunixgroup(<user>,<unix group>);
+	        
+Returns a text string on error
+Returns false on success
+
+=cut
+
+sub deluserfromunixgroup
+{
+	my($self) = shift;
+	my($user,$group) = @_;
+	my($msg);
+	$msg = $self->{LDAPOBJ}->modify( 
+				"cn=$group, ou=unixgroups,".$self->{BASEDN},
+				delete	=> {
+						'memberUid' => $user	
 					}
 				);
 	$msg->code && return ($msg->error);

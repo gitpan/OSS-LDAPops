@@ -299,6 +299,33 @@ elsif ($ARGV[0] eq '-duh')
 	if($ret) {die($ret);};
 	exit;
 }
+
+#Add user to unix group
+elsif ($ARGV[0] eq '-aung')
+{
+	if (!$ARGV[1] or !$ARGV[2])
+	{
+		print("\nUsage: ldapops.pl -aung <userid> <unix group>\n");
+		exit;
+	};
+	$ldapopsobj->bind;
+	$ret = $ldapopsobj->addusertounixgroup($ARGV[1],$ARGV[2]);
+	if($ret) {die($ret);};
+	exit;
+}
+#Delete user from unix group
+elsif ($ARGV[0] eq '-dung')
+{
+	if (!$ARGV[1] or !$ARGV[2])
+	{
+		print("\nUsage: ldapops.pl -aung <userid> <unix group>\n");
+		exit;
+	};
+	$ldapopsobj->bind;
+	$ret = $ldapopsobj->deluserfromunixgroup($ARGV[1],$ARGV[2]);
+	if($ret) {die($ret);};
+	exit;
+}
 #Update passworf for user
 elsif ($ARGV[0] eq '-up')
 {
@@ -417,6 +444,8 @@ else
 	print("./ldapops.pl -dugug <delgroup> <fromgroup>\t| delete user group from user group\n");
 	print("./ldapops.pl -ahghg <addgroup> <togroup>\t| add host group to host group\n");
 	print("./ldapops.pl -dhghg <delgroup> <fromgroup>\t| delete host group from host group\n");
+	print("./ldapops.pl -aung <userid> <unix group>\t| add user to unix group\n");
+	print("./ldapops.pl -dung <userid> <unix group>\t| del user from unix group\n");
 	print("./ldapops.pl -au \t\t\t\t| add user\n");
 	print("./ldapops.pl -up \t\t\t\t| update password for user\n");
 	print("./ldapops.pl -upr \t\t\t\t| update password for user and force reset on next login\n");
