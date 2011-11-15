@@ -93,7 +93,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.024';
+$VERSION = '1.025';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
