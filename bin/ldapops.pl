@@ -76,6 +76,10 @@ This example file is also included in the source distribution.
 
 
 =cut
+BEGIN
+{
+        unshift(@INC, './lib/');
+	        };
 
 #use strict pragma.
 use strict;
@@ -383,7 +387,7 @@ elsif ($ARGV[0] eq '-au')
 	$pw = <STDIN>;
 	chomp($pw);
 	$ldapopsobj->bind;
-	$ret = $ldapopsobj->adduser($uid,$givenname,$sn,$givenname.' '.$sn,$mail,$pw,$gid,$$GLOBAL::localconfig{HOMEPREFIX}.$uid,$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$$GLOBAL::localconfig{SHADOWINACTIVE},$employeenumber);
+	$ret = $ldapopsobj->adduser($uid,$givenname,$sn,$givenname.' '.$sn,$mail,$pw,$gid,$$GLOBAL::localconfig{HOMEPREFIX}.$uid,$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$$GLOBAL::localconfig{SHADOWINACTIVE},$employeenumber,$$GLOBAL::localconfig{MAILMESSAGESTORE}.$mail.'/.maildir/');
 	if($ret) {die($ret);};
 	exit;
 }
@@ -408,7 +412,7 @@ elsif ($ARGV[0] eq '-b')
 	{
 		chomp($line);
 		@linesplit = split(/,/,$line);
-		my($ret) = $ldapopsobj->adduser($linesplit[0],$linesplit[1],$linesplit[2],$linesplit[1].' '.$linesplit[2],$linesplit[3],$linesplit[5],$linesplit[6],$$GLOBAL::localconfig{HOMEPREFIX}.$linesplit[0],$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$$GLOBAL::localconfig{SHADOWINACTIVE},$linesplit[4]);
+		my($ret) = $ldapopsobj->adduser($linesplit[0],$linesplit[1],$linesplit[2],$linesplit[1].' '.$linesplit[2],$linesplit[3],$linesplit[5],$linesplit[6],$$GLOBAL::localconfig{HOMEPREFIX}.$linesplit[0],$$GLOBAL::localconfig{SHELL},$$GLOBAL::localconfig{SHADOWMAX},$$GLOBAL::localconfig{SHADOWMIN},$$GLOBAL::localconfig{SHADOWWARNING},$$GLOBAL::localconfig{SHADOWINACTIVE},$linesplit[4],$$GLOBAL::localconfig{MAILMESSAGESTORE}.$linesplit[7].'/.maildir/');
 		if($ret) {print("User $linesplit[0] not added: $ret\n");};
 	
 	};

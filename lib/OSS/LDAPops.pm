@@ -93,7 +93,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.025';
+$VERSION = '1.026';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -386,7 +386,7 @@ sub adduser
 {
 	
 	my($self) = shift;
-	my($uid, $givenname, $sn, $cn, $mail, $password, $gid, $homedir, $loginshell,$shadowmax, $shadowmin, $shadowwarn, $shadowinactive, $employeenumber) = @_;
+	my($uid, $givenname, $sn, $cn, $mail, $password, $gid, $homedir, $loginshell,$shadowmax, $shadowmin, $shadowwarn, $shadowinactive, $employeenumber,$mailmessagestore) = @_;
 	my($msg);
 	srand;
 	my($salt) = $self->salt;
@@ -431,13 +431,14 @@ sub adduser
 					'loginshell'	=>	$loginshell,
 					'userpassword'	=>	"{CRYPT}".crypt($password,$salt),
 					'description'	=>	"User entry for $cn - $uid",
-					'objectclass'	=>	['top','person','inetOrgPerson','posixAccount','shadowAccount'],
+					'objectclass'	=>	['top','person','inetOrgPerson','posixAccount','shadowAccount','qmailUser'],
 					'shadowMax'	=>	$shadowmax,
 					'shadowMin'	=>	$shadowmin,
 					'shadowWarning'	=>	$shadowwarn,
 					'employeeNumber'=>	$employeenumber,
 					'shadowInactive'=>	$shadowinactive,
-					'shadowLastChange'=>	0
+					'shadowLastChange'=>	0,
+					'mailMessageStore' => $mailmessagestore
 					]
 				);
 	$msg->code && return ($msg->error);
