@@ -19,4 +19,4 @@ no_index:
     - inc
 requires:
   Net::LDAP: 0.34
-version: 1.026
+version: 1.027

@@ -120,7 +120,7 @@ if ($ARGV[0] eq '-su')
 	#if($ret) {die($ret);};
 	exit;
 }
-#Search for group 
+#Search for netgroup 
 elsif ($ARGV[0] eq '-sg')
 {
 	if (!$ARGV[1]) 
@@ -130,6 +130,20 @@ elsif ($ARGV[0] eq '-sg')
 	};
 	$ldapopsobj->bind;
 	@retu = $ldapopsobj->searchnetgroup($ARGV[1]);
+	die($retu[0]) if (($retu[0] ne undef) and (ref($retu[0]) !~ m/Net::LDAP::Entry/) );
+	foreach my $entry (@retu) {$entry->dump; }
+	exit;
+}
+#Search for unix group
+elsif ($ARGV[0] eq '-sx')
+{
+	if (!$ARGV[1]) 
+	{
+		print("\nUsage: ldaops.pl -sx <search string>\n");
+		exit;
+	};
+	$ldapopsobj->bind;
+	@retu = $ldapopsobj->searchunixgroup($ARGV[1]);
 	die($retu[0]) if (($retu[0] ne undef) and (ref($retu[0]) !~ m/Net::LDAP::Entry/) );
 	foreach my $entry (@retu) {$entry->dump; }
 	exit;
@@ -170,6 +184,19 @@ elsif ($ARGV[0] eq '-aug')
 	};
 	$ldapopsobj->bind;
 	$ret = $ldapopsobj->addusergroup($ARGV[1]);
+	if($ret) {die($ret);};
+	exit;
+}
+#Add unix group
+elsif ($ARGV[0] eq '-axg')
+{
+	if (!$ARGV[1] and !$ARGV[2])
+	{
+		print("\nUsage: ldapops.pl -axg <group> <gid>\n");
+		exit;
+	};
+	$ldapopsobj->bind;
+	$ret = $ldapopsobj->addunixgroup($ARGV[1],$ARGV[2]);
 	if($ret) {die($ret);};
 	exit;
 }
@@ -434,10 +461,12 @@ else
 #Print usage information 
 {
 	print("\nUsage:\n\n./ldapops.pl -su <string>\t\t\t| search user\n");
-	print("./ldapops.pl -sg <string>\t\t\t| search group\n");
+	print("./ldapops.pl -sg <string>\t\t\t| search netgroup\n");
+	print("./ldapops.pl -sx <string>\t\t\t| search unix/posix group\n");
 	print("./ldapops.pl -ah <hostname>\t\t\t| add host\n");
 	print("./ldapops.pl -ahg <group>\t\t\t| add hostgroup\n");
 	print("./ldapops.pl -aug <user>\t\t\t| add usergroup\n");
+	print("./ldapops.pl -axg <group> <gid> \t\t\t|add unix/posix group\n");
 	print("./ldapops.pl -auug <userid> <group>\t\t| add user to user group\n");
 	print("./ldapops.pl -duug <userid> <group>\t\t| delete user from user group\n");
 	print("./ldapops.pl -auh <userid> <host>\t\t| add user to host\n");

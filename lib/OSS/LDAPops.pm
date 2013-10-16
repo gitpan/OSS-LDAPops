@@ -62,11 +62,10 @@ nis.schema is patched to allow equalityMatch on nisNetgroupTriple objects
 
 =back
 
-For more information on directory configuration, and a complete HOWTO which follows
-this model from installation through to implementation and host configuration, please 
-see:
+An exampe skeleton directory is provided in the distribution tarball as skeleton-directory.ldif. 
 
-<TODO: check back soon>
+A patched version of nis.schema, suitable for use with OpenLDAP is included in the distribution tarball
+as nis.schema.
 
 =head1 METHODS
 
@@ -93,7 +92,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.026';
+$VERSION = '1.027';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -275,6 +274,36 @@ sub searchnetgroup
 
 };
 
+
+=head2 searchunixgroup
+
+Search for a unix (posix) group  entry in the directory.
+
+	#$obj->searchunixgroup(<group>);
+
+(the wildcard * can be used)
+	
+Returns an array of Net::LDAP:Entry objects on success
+Returns false on no results. 
+Returns an error string on error. 
+
+=cut
+sub searchunixgroup
+{
+	my($self) = shift;
+	my($srch) = shift;
+	my($msg);
+        $msg = $self->{LDAPOBJ}->search(
+				base    => 'ou=unixgroups,'.$self->{BASEDN},
+				scope   => 'one',
+				filter  => "(cn=$srch)"
+				);
+	$msg->code && ($msg->error);
+	return($msg->entries);
+	#foreach my $entry ($msg->entries) {$entry->dump;};
+
+};
+
 =head2 addhost
 
 Add a host entry to the directory
@@ -353,6 +382,34 @@ sub addusergroup
 					]
 				);
 	$msg->code && return ($msg->error);
+
+};
+
+=head2 addunixgroup
+
+Add a unix group to the directory
+
+	$obj->addunixgroup(<groupname>,<gid>);
+
+returns a text string on error
+returns false on success
+=cut
+sub addunixgroup
+{
+        my($self) =shift;
+        my($groupname) = shift;
+	my($gid) = shift;
+        my($msg);
+        $msg = $self->{LDAPOBJ}->add(
+                                "cn=$groupname, ou=unixgroups,".$self->{BASEDN},
+                                attr    => [
+                                        'cn'            =>      $groupname,
+                                        'description'   =>      "Unix Group: $groupname",
+                                        'objectclass'   =>      ['top','posixGroup'],
+					'gidNumber'		=>	$gid
+                                        ]
+                                );
+        $msg->code && return ($msg->error);
 
 };
 
