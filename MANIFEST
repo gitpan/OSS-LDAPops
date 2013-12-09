@@ -4,10 +4,15 @@ lib/OSS/LDAPops.pm
 lib/OSS/Fileops.pm
 bin/ldapops.pl
 bin/netgroupcache.pl
-ldapops.conf
-netgroupcache.conf
-batchadd.csv
-skeleton-directory.ldif
-nis.schema
+examples/ldapops.conf
+examples/netgroupcache.conf
+examples/batchadd.csv
+examples/skeleton-directory.ldif
+examples/nis.schema
+examples/slapd.conf
+examples/access.conf
+examples/ldap.conf
+examples/system-auth
+examples/nsswitch.conf
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

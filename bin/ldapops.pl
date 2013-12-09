@@ -16,7 +16,7 @@ All operations required to administer the directory are avaliable
 via this program apart from changing objects outside of the user and group
 space. These must be altered manuaelly. 
 
-This code does not have to run on the LDAP server as it is networm enabled
+This code does not have to run on the LDAP server as it is network enabled
 and can be used over the network from a suitable location, ACL permitting of course!
 
 =head1 CONFIG
@@ -366,7 +366,7 @@ elsif ($ARGV[0] eq '-up')
 		exit;
 	};
 	$ldapopsobj->bind;
-	$ret = $ldapopsobj->updatepw($ARGV[1],$ARGV[2],0);
+	$ret = $ldapopsobj->updatepw($ARGV[1],$ARGV[2],0,'people');
 	if($ret) {die($ret);};
 	exit;
 }
@@ -379,7 +379,21 @@ elsif ($ARGV[0] eq '-upr')
                 exit;
         };
         $ldapopsobj->bind;
-        $ret = $ldapopsobj->updatepw($ARGV[1],$ARGV[2],1);
+        $ret = $ldapopsobj->updatepw($ARGV[1],$ARGV[2],1,'people');
+        if($ret) {die($ret);};
+        exit;
+}
+
+#Update password in non-standard ou
+elsif ($ARGV[0] eq '-upo')
+{
+        if (!$ARGV[1] or !$ARGV[2] or !$ARGV[3])
+        {
+                print("\nUsage: ldapops.pl -upr <userid> <password> <ou>\n");
+                exit;
+        };
+        $ldapopsobj->bind;
+        $ret = $ldapopsobj->updatepw($ARGV[1],$ARGV[2],0, $ARGV[3]);
         if($ret) {die($ret);};
         exit;
 }
@@ -466,7 +480,7 @@ else
 	print("./ldapops.pl -ah <hostname>\t\t\t| add host\n");
 	print("./ldapops.pl -ahg <group>\t\t\t| add hostgroup\n");
 	print("./ldapops.pl -aug <user>\t\t\t| add usergroup\n");
-	print("./ldapops.pl -axg <group> <gid> \t\t\t|add unix/posix group\n");
+	print("./ldapops.pl -axg <group> <gid> \t\t|add unix/posix group\n");
 	print("./ldapops.pl -auug <userid> <group>\t\t| add user to user group\n");
 	print("./ldapops.pl -duug <userid> <group>\t\t| delete user from user group\n");
 	print("./ldapops.pl -auh <userid> <host>\t\t| add user to host\n");
@@ -482,7 +496,8 @@ else
 	print("./ldapops.pl -au \t\t\t\t| add user\n");
 	print("./ldapops.pl -up \t\t\t\t| update password for user\n");
 	print("./ldapops.pl -upr \t\t\t\t| update password for user and force reset on next login\n");
-	print("./ldapops.pl -b <csv file> \t\t\t| batch add users from CSV file (see batchadd.csv for format\n");
+	print("./ldapops.pl -upo \t\t\t\t| update password for user in non-standard ou\n");
+	print("./ldapops.pl -b <csv file> \t\t\t| batch add users from CSV file (see batchadd.csv for format)\n");
 	print("./ldapops.pl -d \'<dn>\'\t\t\t\t| delete dn (note the quotes)\n");
 	print("\nNote: the wildcard \'*\' can be used, but must be escaped as \\*\n");
 

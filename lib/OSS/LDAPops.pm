@@ -62,10 +62,35 @@ nis.schema is patched to allow equalityMatch on nisNetgroupTriple objects
 
 =back
 
-An exampe skeleton directory is provided in the distribution tarball as skeleton-directory.ldif. 
+=head1 FILES TO HELP WITH SETTING UP A DIRECTORY
 
-A patched version of nis.schema, suitable for use with OpenLDAP is included in the distribution tarball
-as nis.schema.
+In the "examples" directory, there are several files to help you out, including:
+
+=over
+
+=item *
+
+An example skeleton directory. 
+
+=item *
+
+A patched version of nis.schema, suitable for use with OpenLDAP
+
+=item *
+
+An example of OpenLDAP's slapd.conf, showing example acls
+
+=item *
+
+Several other example files, to asisst in setting up *NIX servers to use the directory are also included. 
+
+=back
+
+=head1 USING THE DIRECTORY WITH *NIX SERVERS
+
+The reader should consider looking at nss_ldap and pam_ldap, here:
+
+http://www.padl.com/Contents/OpenSourceSoftware.html
 
 =head1 METHODS
 
@@ -92,7 +117,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.028';
+$VERSION = '1.029';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -514,13 +539,13 @@ Returns false on success
 sub updatepw
 {
 	my($self) = shift;
-	my($yw,$newpw,$forcereset) = @_;
+	my($yw,$newpw,$forcereset,$ou) = @_;
 	my($msg);
 	my($salt) = $self->salt;
 	if ($forcereset)
 	{
                 $msg = $self->{LDAPOBJ}->modify(
-                                "uid=$yw, ou=people,".$self->{BASEDN},
+                                "uid=$yw, ou=$ou,".$self->{BASEDN},
                                 replace => {
                                                 'userpassword' 		=> "{CRYPT}".crypt($newpw,$salt),
 						'shadowLastChange' 	=> 0
@@ -530,7 +555,7 @@ sub updatepw
 	} else
 	{
 		$msg = $self->{LDAPOBJ}->modify( 
-				"uid=$yw, ou=people,".$self->{BASEDN},
+				"uid=$yw, ou=$ou,".$self->{BASEDN},
 				replace	=> {
 						'userpassword' => "{CRYPT}".crypt($newpw,$salt)	
 					}
