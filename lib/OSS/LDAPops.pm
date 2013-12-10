@@ -117,7 +117,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.029';
+$VERSION = '1.030';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -147,6 +147,8 @@ use strict;
 package OSS::LDAPops;
 
 use Net::LDAP;
+use Digest::SHA1;
+use MIME::Base64;
 
 #New object
 #
@@ -438,21 +440,25 @@ sub addunixgroup
 
 };
 
-#Generate a random salt for use with crypt()
-#
-#Usage:
-#
-#$obj->salt;
-#
-#Returns a two-character salt. 
-sub salt
- {
-     my($self) = shift;
-     my $length = 2;
-     $length = $_[0] if exists $_[0];
+#Generate salt for SHA1. 
+sub salt8 {
+      	my($self) = shift;
+	my $salt = join '', ('a'..'z')[rand 26,rand 26,rand 26,rand 26,rand 26,rand 26,rand 26,rand 26];
+	return($salt);
+}
 
-	return join "", ('.', '/', 0..9, 'A'..'Z', 'a'..'z')[map {rand 64} (1..$length)];
-};
+
+sub password_ssha {
+        my($self) = shift;
+	my $pass=shift;
+        my ($hashedPasswd,$salt);
+        $salt = &salt8;
+        my $ctx = Digest::SHA1->new;
+        $ctx->add($pass);
+        $ctx->add($salt);
+        $hashedPasswd = '{SSHA}' . encode_base64($ctx->digest . $salt,'');
+        return($hashedPasswd);
+}
 
 =head2 adduser
 
@@ -471,7 +477,7 @@ sub adduser
 	my($uid, $givenname, $sn, $cn, $mail, $password, $gid, $homedir, $loginshell,$shadowmax, $shadowmin, $shadowwarn, $shadowinactive, $employeenumber,$mailmessagestore) = @_;
 	my($msg);
 	srand;
-	my($salt) = $self->salt;
+	my($salt) = $self->salt8;
 
 	$msg = $self->{LDAPOBJ}->search( 
 				base 	=> 'uid=maxUid,'.$self->{BASEDN},
@@ -511,7 +517,7 @@ sub adduser
 					'gidNumber'	=>	$gid,
 					'homeDirectory'	=>	$homedir,
 					'loginshell'	=>	$loginshell,
-					'userpassword'	=>	"{CRYPT}".crypt($password,$salt),
+					'userpassword'	=>	$self->password_ssha($password,$salt),
 					'description'	=>	"User entry for $cn - $uid",
 					'objectclass'	=>	['top','person','inetOrgPerson','posixAccount','shadowAccount','qmailUser'],
 					'shadowMax'	=>	$shadowmax,
@@ -525,6 +531,8 @@ sub adduser
 				);
 	$msg->code && return ($msg->error);
 };
+
+
 
 =head2 updatepw
 
@@ -541,13 +549,13 @@ sub updatepw
 	my($self) = shift;
 	my($yw,$newpw,$forcereset,$ou) = @_;
 	my($msg);
-	my($salt) = $self->salt;
+	my($salt) = $self->salt8;
 	if ($forcereset)
 	{
                 $msg = $self->{LDAPOBJ}->modify(
                                 "uid=$yw, ou=$ou,".$self->{BASEDN},
                                 replace => {
-                                                'userpassword' 		=> "{CRYPT}".crypt($newpw,$salt),
+                                                'userpassword' 		=> $self->password_ssha($newpw,$salt),
 						'shadowLastChange' 	=> 0
                                         }
                         );
@@ -557,7 +565,7 @@ sub updatepw
 		$msg = $self->{LDAPOBJ}->modify( 
 				"uid=$yw, ou=$ou,".$self->{BASEDN},
 				replace	=> {
-						'userpassword' => "{CRYPT}".crypt($newpw,$salt)	
+						'userpassword' => $self->password_ssha($newpw,$salt)	
 					}
 			);
 	}
