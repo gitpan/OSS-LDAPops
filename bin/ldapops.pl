@@ -51,28 +51,33 @@ This example file is also included in the source distribution.
 
 =head1 USAGE
 
-	./ldapops.pl -su <string>                       | search user
-	./ldapops.pl -sg <string>                       | search group
-	./ldapops.pl -ah <hostname>                     | add host
-	./ldapops.pl -ahg <group>                       | add hostgroup
-	./ldapops.pl -aug <user>                        | add usergroup
-	./ldapops.pl -auug <userid> <group>             | add user to user group
-	./ldapops.pl -duug <userid> <group>             | delete user from user group
-	./ldapops.pl -auh <userid> <host>               | add user to host
-	./ldapops.pl -duh <userid> <host>               | delete user from host
-	./ldapops.pl -ahhg <host> <group>               | add host to host group
-	./ldapops.pl -dhhg <host> <group>               | delete host from host group
-	./ldapops.pl -augug <addgroup> <togroup>        | add user group to user group
-	./ldapops.pl -dugug <delgroup> <fromgroup>      | delete user group from user group
-	./ldapops.pl -ahghg <addgroup> <togroup>        | add host group to host group
-	./ldapops.pl -dhghg <delgroup> <fromgroup>      | delete host group from host group
-	./ldapops.pl -au                                | add user
-	./ldapops.pl -up                                | update password for user
-	./ldapops.pl -upr                               | update password for user and force reset on next login
-	./ldapops.pl -b <csv file>                      | batch add users from CSV file (see batchadd.csv for format
-	./ldapops.pl -d '<dn>'                          | delete dn (note the quotes)
+	ldapops.pl -su <string>                       | search user
+	ldapops.pl -sg <string>                       | search netgroup
+	ldapops.pl -sx <string>                       | search unix/posix group
+	ldapops.pl -ah <hostname>                     | add host
+	ldapops.pl -ahg <group>                       | add hostgroup
+	ldapops.pl -aug <user>                        | add usergroup
+	ldapops.pl -axg <group> <gid>                 |add unix/posix group
+	ldapops.pl -auug <userid> <group>             | add user to user group
+	ldapops.pl -duug <userid> <group>             | delete user from user group
+	ldapops.l -auh <userid> <host>               | add user to host
+	ldapops.pl -duh <userid> <host>               | delete user from host
+	ldapops.pl -ahhg <host> <group>               | add host to host group
+	ldapops.pl -dhhg <host> <group>               | delete host from host group
+	ldapops.pl -augug <addgroup> <togroup>        | add user group to user group
+	ldapops.pl -dugug <delgroup> <fromgroup>      | delete user group from user group
+	ldapops.pl -ahghg <addgroup> <togroup>        | add host group to host group
+	ldapops.pl -dhghg <delgroup> <fromgroup>      | delete host group from host group
+	ldapops.pl -aung <userid> <unix group>        | add user to unix group
+	ldapops.pl -dung <userid> <unix group>        | del user from unix group
+	ldapops.pl -au                                | add user
+	ldapops.pl -up <userid> <password>            | update password for user
+	ldapops.pl -upr <userid> <password>           | update password for user and force reset on next login
+	ldapops.pl -upo <userid> <password> <ou>      | update password for user in non-standard ou
+	ldapops.pl -b <csv file>                      | batch add users from CSV file (see batchadd.csv for format)
+	ldapops.pl -d '<dn>'                          | delete dn (note the quotes)
 
-	Note: the wildcard '*' can be used, but must be escaped as \*
+Note: the wildcard '*' can be used, but must be escaped as \*
 
 
 =cut
@@ -85,7 +90,10 @@ BEGIN
 use strict;
 
 #Use OSS::LDAPops object. 
-use OSS::LDAPops;
+use OSS::LDAPops 1.031;
+
+warn ("Your OSS::LDAPops is version $OSS::LDAPops::VERSION. This version lf ldapops.pl is designed\nto work with 1.0.31. Upgrade this script!\n") unless ($OSS::LDAPops::VERSION == 1.031);
+
 #Use file operations
 use OSS::Fileops;
 
@@ -99,9 +107,12 @@ else
 {
 	require '/etc/ldapops.conf'
 };
-#Instantiate new object. 
-my($ldapopsobj) = OSS::LDAPops->new($GLOBAL::config);
-if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
+#Instantiate new object.
+my($ldapopsobj);
+if ($ARGV[1]) {
+	$ldapopsobj = OSS::LDAPops->new($GLOBAL::config);
+	if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
+};
 my($ret);
 my(@retu);
 #If argument x received....
@@ -383,7 +394,30 @@ elsif ($ARGV[0] eq '-upr')
         if($ret) {die($ret);};
         exit;
 }
-
+#Lock account
+elsif ($ARGV[0] eq '-la')
+{
+        if (!$ARGV[1])
+        {
+                print("\nUsage: ldapops.pl -la <userid>\n");
+                exit;
+        };
+        $ldapopsobj->bind;
+        $ret = $ldapopsobj->lockacct($ARGV[1],1);
+        if($ret) {die($ret);};
+}
+#Unlock account
+elsif ($ARGV[0] eq '-ua')
+{
+        if (!$ARGV[1])
+        {
+                print("\nUsage: ldapops.pl -ua <userid>\n");
+                exit;           
+        };      
+        $ldapopsobj->bind;                              
+        $ret = $ldapopsobj->lockacct($ARGV[1],0);
+        if($ret) {die($ret);};                                          
+}   
 #Update password in non-standard ou
 elsif ($ARGV[0] eq '-upo')
 {
@@ -474,31 +508,33 @@ elsif ($ARGV[0] eq '-d')
 else 
 #Print usage information 
 {
-	print("\nUsage:\n\n./ldapops.pl -su <string>\t\t\t| search user\n");
-	print("./ldapops.pl -sg <string>\t\t\t| search netgroup\n");
-	print("./ldapops.pl -sx <string>\t\t\t| search unix/posix group\n");
-	print("./ldapops.pl -ah <hostname>\t\t\t| add host\n");
-	print("./ldapops.pl -ahg <group>\t\t\t| add hostgroup\n");
-	print("./ldapops.pl -aug <user>\t\t\t| add usergroup\n");
-	print("./ldapops.pl -axg <group> <gid> \t\t|add unix/posix group\n");
-	print("./ldapops.pl -auug <userid> <group>\t\t| add user to user group\n");
-	print("./ldapops.pl -duug <userid> <group>\t\t| delete user from user group\n");
-	print("./ldapops.pl -auh <userid> <host>\t\t| add user to host\n");
-	print("./ldapops.pl -duh <userid> <host>\t\t| delete user from host\n");
-	print("./ldapops.pl -ahhg <host> <group>\t\t| add host to host group\n");
-	print("./ldapops.pl -dhhg <host> <group>\t\t| delete host from host group\n");
-	print("./ldapops.pl -augug <addgroup> <togroup>\t| add user group to user group\n");
-	print("./ldapops.pl -dugug <delgroup> <fromgroup>\t| delete user group from user group\n");
-	print("./ldapops.pl -ahghg <addgroup> <togroup>\t| add host group to host group\n");
-	print("./ldapops.pl -dhghg <delgroup> <fromgroup>\t| delete host group from host group\n");
-	print("./ldapops.pl -aung <userid> <unix group>\t| add user to unix group\n");
-	print("./ldapops.pl -dung <userid> <unix group>\t| del user from unix group\n");
-	print("./ldapops.pl -au \t\t\t\t| add user\n");
-	print("./ldapops.pl -up \t\t\t\t| update password for user\n");
-	print("./ldapops.pl -upr \t\t\t\t| update password for user and force reset on next login\n");
-	print("./ldapops.pl -upo \t\t\t\t| update password for user in non-standard ou\n");
-	print("./ldapops.pl -b <csv file> \t\t\t| batch add users from CSV file (see batchadd.csv for format)\n");
-	print("./ldapops.pl -d \'<dn>\'\t\t\t\t| delete dn (note the quotes)\n");
+	print("\nUsage:\n\nldapops.pl -su <string>\t\t\t\t| search user\n");
+	print("ldapops.pl -sg <string>\t\t\t\t| search netgroup\n");
+	print("ldapops.pl -sx <string>\t\t\t\t| search unix/posix group\n");
+	print("ldapops.pl -ah <hostname>\t\t\t| add host\n");
+	print("ldapops.pl -ahg <group>\t\t\t\t| add hostgroup\n");
+	print("ldapops.pl -aug <user>\t\t\t\t| add usergroup\n");
+	print("ldapops.pl -axg <group> <gid> \t\t\t| add unix/posix group\n");
+	print("ldapops.pl -auug <userid> <group>\t\t| add user to user group\n");
+	print("ldapops.pl -duug <userid> <group>\t\t| delete user from user group\n");
+	print("ldapops.pl -auh <userid> <host>\t\t\t| add user to host\n");
+	print("ldapops.pl -duh <userid> <host>\t\t\t| delete user from host\n");
+	print("ldapops.pl -ahhg <host> <group>\t\t\t| add host to host group\n");
+	print("ldapops.pl -dhhg <host> <group>\t\t\t| delete host from host group\n");
+	print("ldapops.pl -augug <addgroup> <togroup>\t\t| add user group to user group\n");
+	print("ldapops.pl -dugug <delgroup> <fromgroup>\t| delete user group from user group\n");
+	print("ldapops.pl -ahghg <addgroup> <togroup>\t\t| add host group to host group\n");
+	print("ldapops.pl -dhghg <delgroup> <fromgroup>\t| delete host group from host group\n");
+	print("ldapops.pl -aung <userid> <unix group>\t\t| add user to unix group\n");
+	print("ldapops.pl -dung <userid> <unix group>\t\t| del user from unix group\n");
+	print("ldapops.pl -au \t\t\t\t\t| add user\n");
+	print("ldapops.pl -up <userid> <password>\t\t| update password for user\n");
+	print("ldapops.pl -upr <userid> <password>\t\t| update password for user and force reset on next login\n");
+	print("ldapops.pl -upo <userid> <password> <ou>\t| update password for user in non-standard ou\n");
+	print("ldapops.pl -la <userid>\t\t\t\t| Lock (expire) user account\n");
+	print("ldapops.pl -ul <userid>\t\t\t\t| unlock user accout\n");
+	print("ldapops.pl -b <csv file> \t\t\t| batch add users from CSV file (see batchadd.csv for format)\n");
+	print("ldapops.pl -d \'<dn>\'\t\t\t\t| delete dn (note the quotes)\n");
 	print("\nNote: the wildcard \'*\' can be used, but must be escaped as \\*\n");
 
 };

@@ -123,9 +123,10 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 =cut
 
-use vars qw($VERSION);
 #Define version
-$VERSION = '1.031';
+$OSS::LDAPops::VERSION = '1.032';
+
+
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
@@ -574,6 +575,42 @@ sub updatepw
 				"uid=$yw, ou=$ou,".$self->{BASEDN},
 				replace	=> {
 						'userpassword' => $self->password_ssha($newpw,$salt)	
+					}
+			);
+	}
+	$msg->code && return ($msg->error);
+};
+
+=head2 lockacct
+
+Lock a user account by setting shadowExpire to 1
+
+	$obj->lockacct(<uid>,[1|0]);
+
+1 locks, 0 unlocks. 
+
+=cut
+
+sub lockacct {
+	my($self) = shift;
+	my($uid) = shift;
+	my($lock) = shift;
+	my($msg);
+	if ($lock)
+	{
+                $msg = $self->{LDAPOBJ}->modify(
+                                "uid=$uid, ou=people,".$self->{BASEDN},
+                                replace => {
+                                                'shadowExpire' 		=> 1
+                                        }
+                        );
+
+	} else
+	{
+		$msg = $self->{LDAPOBJ}->modify( 
+				"uid=$uid, ou=people,".$self->{BASEDN},
+				replace	=> {
+						'shadowExpire' 		=> -1
 					}
 			);
 	}
