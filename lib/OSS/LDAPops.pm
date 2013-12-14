@@ -82,6 +82,14 @@ An example of OpenLDAP's slapd.conf, showing example acls
 
 =item *
 
+changepassword.pl - an example simple CGI script using OSS::LDAPops
+
+=item *
+
+notifypasswordexpiry.pl - a script to send an email to users when their password expires.
+
+=item *
+
 Several other example files, to asisst in setting up *NIX servers to use the directory are also included. 
 
 =back
@@ -117,7 +125,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 
 use vars qw($VERSION);
 #Define version
-$VERSION = '1.030';
+$VERSION = '1.031';
 
 #Please also note, proper error checking MUST be used to ensure
 #the integrity of the directory.
