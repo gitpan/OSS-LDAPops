@@ -90,6 +90,10 @@ notifypasswordexpiry.pl - a script to send an email to users when their password
 
 =item *
 
+ppolicy.ldif - an example password policy to use with the ppolicy overlay. 
+
+=item *
+
 Several other example files, to asisst in setting up *NIX servers to use the directory are also included. 
 
 =back
@@ -124,7 +128,7 @@ Instantiates an object and connects to the LDAP server. Returns an object on suc
 =cut
 
 #Define version
-$OSS::LDAPops::VERSION = '1.032';
+$OSS::LDAPops::VERSION = '1.033';
 
 
 
@@ -585,9 +589,8 @@ sub updatepw
 
 Lock a user account by setting shadowExpire to 1
 
-	$obj->lockacct(<uid>,[1|0]);
+	$obj->lockacct(<uid>,<lock [1|0]>,<ppolicy [1|0]>);
 
-1 locks, 0 unlocks. 
 
 =cut
 
@@ -595,6 +598,7 @@ sub lockacct {
 	my($self) = shift;
 	my($uid) = shift;
 	my($lock) = shift;
+	my($useppolicy) = shift;
 	my($msg);
 	if ($lock)
 	{

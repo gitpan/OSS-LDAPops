@@ -16,5 +16,6 @@ examples/system-auth
 examples/nsswitch.conf
 examples/changepassword.pl
 examples/notifypasswordexpiry.pl
+examples/ppolicy.ldif
 META.yml                                 Module YAML meta-data (added by MakeMaker)
 META.json                                Module JSON meta-data (added by MakeMaker)

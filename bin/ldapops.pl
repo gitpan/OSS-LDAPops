@@ -90,9 +90,9 @@ BEGIN
 use strict;
 
 #Use OSS::LDAPops object. 
-use OSS::LDAPops 1.031;
+use OSS::LDAPops 1.033;
 
-warn ("Your OSS::LDAPops is version $OSS::LDAPops::VERSION. This version lf ldapops.pl is designed\nto work with 1.0.31. Upgrade this script!\n") unless ($OSS::LDAPops::VERSION == 1.031);
+warn ("Your OSS::LDAPops is version $OSS::LDAPops::VERSION. This version lf ldapops.pl is designed\nto work with 1.0.33. Upgrade this script!\n") unless ($OSS::LDAPops::VERSION == 1.033);
 
 #Use file operations
 use OSS::Fileops;
@@ -109,7 +109,7 @@ else
 };
 #Instantiate new object.
 my($ldapopsobj);
-if ($ARGV[1]) {
+if ($ARGV[0]) {
 	$ldapopsobj = OSS::LDAPops->new($GLOBAL::config);
 	if (ref($ldapopsobj) !~ m/OSS::LDAPops/ ) {die("Error instantiating object: $ldapopsobj")}; 
 };
